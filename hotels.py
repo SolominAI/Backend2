@@ -1,5 +1,5 @@
-from fastapi import Query, Body, APIRouter
-
+from fastapi import Query, APIRouter, Body
+from schemas.hotels import Hotel, HotelPATCH
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
@@ -27,26 +27,31 @@ def get_hotels(
 
 
 @router.post('')
-def create_hotel(
-        title: str = Body(embed=True, description=''),
-):
+def create_hotel(hotel_data: Hotel = Body(openapi_examples={
+    '1': {'summary': 'Сочи', 'value': {
+        'title': 'Отель Сочи 5 звезд у моря',
+        'name': 'sochi_u_morya'
+    }},
+    '2': {'summary': 'Дубай', 'value': {
+        'title': 'У фантана',
+        'name': 'dubai_fountain'
+    }}
+})):
     global hotels
     hotels.append({
         'id': int(hotels[-1]['id']) + 1,
-        'title': title
+        'title': hotel_data.title,
+        'name': hotel_data.name
     })
+    return {'status': 'OK'}
 
 
 @router.put('/{hotel_id}')
-def edit_hotel(
-        hotel_id: int,
-        title: str = Body(),
-        name: str = Body(),
-):
+def edit_hotel(hotel_id: int, hotel_data: Hotel):
     global hotels
     hotel = [hotel for hotel in hotels if hotel['id'] == hotel_id][0]
-    hotel['title'] = title
-    hotel['name'] = name
+    hotel['title'] = hotel_data.title
+    hotel['name'] = hotel_data.name
     return {'status': 'OK'}
 
 
@@ -55,17 +60,13 @@ def edit_hotel(
     summary='Патч данных отеля',
     description='Ручка обновления параметров отеля по отдельности. Доступны title, name'
 )
-def patch_hotel(
-        hotel_id: int,
-        title: str | None = Body(None),
-        name: str | None = Body(None),
-):
+def patch_hotel(hotel_id: int, hotel_data: HotelPATCH):
     global hotels
     hotel = [hotel for hotel in hotels if hotel['id'] == hotel_id][0]
-    if title is not None and title != "string":
-        hotel['title'] = title
-    if name is not None and name != "string":
-        hotel['name'] = name
+    if hotel_data.title is not None and hotel_data.title != "string":
+        hotel['title'] = hotel_data.title
+    if hotel_data.name is not None and hotel_data.name != "string":
+        hotel['name'] = hotel_data.name
     return {'status': 'OK'}
 
 
