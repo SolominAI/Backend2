@@ -1,17 +1,25 @@
 from fastapi import Query, APIRouter, Body
+
+from dependencies import PaginationDep
 from schemas.hotels import Hotel, HotelPATCH
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
 
 hotels: list[dict[str, str | int]] = [
-    {"id": 1, "title": "Sochi", 'name': 'Sochi5787'},
-    {"id": 2, "title": "Dubai", 'name': 'Dubai4568'},
+    {"id": 1, "title": "Sochi", "name": "sochi"},
+    {"id": 2, "title": "Дубай", "name": "dubai"},
+    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
+    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
+    {"id": 5, "title": "Москва", "name": "moscow"},
+    {"id": 6, "title": "Казань", "name": "kazan"},
+    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
 ]
 
 
 @router.get('')
 def get_hotels(
+        pagination: PaginationDep,
         id: int | None = Query(None, description='Айдишник'),
         title: str | None = Query(None, description='Название отеля'),
 ):
@@ -23,8 +31,10 @@ def get_hotels(
             continue
         hotels_.append(hotel)
 
-    return hotels_
+    if pagination.page and pagination.per_page:
+        return hotels_[pagination.per_page*(pagination.page-1):][:pagination.per_page]
 
+    return hotels_
 
 @router.post('')
 def create_hotel(hotel_data: Hotel = Body(openapi_examples={
