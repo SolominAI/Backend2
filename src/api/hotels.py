@@ -1,7 +1,5 @@
 from fastapi import Query, APIRouter, Body
 
-from sqlalchemy import insert, select
-
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker, engine
 from src.models.hotels import HotelsOrm
@@ -40,15 +38,9 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
         'location': 'г.Дубай, ул. Шейха 1'
     }}
 })):
-    async with (async_session_maker() as session):
-        repository = HotelsRepositories(session)
-        result = await repository.add(hotel_data.model_dump())
+    async with async_session_maker() as session:
+        hotel = await HotelsRepositories(session).add(hotel_data)
         await session.commit()
-
-        if result:
-            hotel = result[0]
-        else:
-            return {"status": "error", "message": "Hotel not added"}
 
     return {"status": "OK", "data": hotel}
 
