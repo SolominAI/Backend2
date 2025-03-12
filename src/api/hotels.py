@@ -40,13 +40,17 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
         'location': 'г.Дубай, ул. Шейха 1'
     }}
 })):
-    async with async_session_maker() as session:
-        add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
-        # print(add_hotel_stmt.compile(engine, compile_kwargs={'literal_binds': True}))
-        await session.execute(add_hotel_stmt)
+    async with (async_session_maker() as session):
+        repository = HotelsRepositories(session)
+        result = await repository.add(hotel_data.model_dump())
         await session.commit()
 
-    return {'status': 'OK'}
+        if result:
+            hotel = result[0]
+        else:
+            return {"status": "error", "message": "Hotel not added"}
+
+    return {"status": "OK", "data": hotel}
 
 
 @router.put('/{hotel_id}')
