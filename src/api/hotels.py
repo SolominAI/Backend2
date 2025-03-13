@@ -1,5 +1,4 @@
-from fastapi import Query, APIRouter, Body, HTTPException
-from sqlalchemy.exc import MultipleResultsFound
+from fastapi import Query, APIRouter, Body
 
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
@@ -45,11 +44,9 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
     return {"status": "OK", "data": hotel}
 
 
-@router.put('')
+@router.put('/{hotel_id}')
 async def edit_hotel(
     hotel_id: int | None = Query(None),
-    title: str | None = Query(None),
-    location: str | None = Query(None),
     hotel_data: Hotel = Body(
         openapi_examples={
             '1': {
@@ -60,24 +57,8 @@ async def edit_hotel(
                 }}
         })):
 
-    filter_params = {}
-    if hotel_id:
-        filter_params['id'] = hotel_id
-    if title:
-        filter_params['title'] = title
-    if location:
-        filter_params['location'] = location
-
     async with async_session_maker() as session:
-        try:
-            hotel = await HotelsRepositories(session).get_one_or_none(**filter_params)
-        except MultipleResultsFound:
-            raise HTTPException(status_code=400, detail='Найдено более одного отеля')
-
-        if hotel is None:
-            raise HTTPException(status_code=404, detail='Отель не найден')
-
-        await HotelsRepositories(session).edit(hotel_data, **filter_params)
+        await HotelsRepositories(session).edit(hotel_data, id=hotel_id)
         await session.commit()
 
     return {'status': 'OK'}
@@ -98,30 +79,9 @@ def patch_hotel(hotel_id: int, hotel_data: HotelPATCH):
     return {'status': 'OK'}
 
 
-@router.delete('')
-async def delete_hotel(
-    hotel_id: int | None = Query(None),
-    title: str | None = Query(None),
-    location: str | None = Query(None)
-):
-
-    filter_params = {}
-    if hotel_id:
-        filter_params['id'] = hotel_id
-    if title:
-        filter_params['title'] = title
-    if location:
-        filter_params['location'] = location
-
+@router.delete('/{hotel_id}')
+async def delete_hotel(hotel_id: int | None = Query(None),):
     async with async_session_maker() as session:
-        try:
-            hotel = await HotelsRepositories(session).get_one_or_none(**filter_params)
-        except MultipleResultsFound:
-            raise HTTPException(status_code=400, detail='Найдено более одного отеля')
-
-        if hotel is None:
-            raise HTTPException(status_code=404, detail='Отель не найден')
-
-        await HotelsRepositories(session).delete(**filter_params)
+        await HotelsRepositories(session).delete(id=hotel_id)
         await session.commit()
     return {'status': 'OK'}
