@@ -8,8 +8,8 @@ class RoomAdd(BaseModel):
     quantity: int
 
 
-# class RoomCreate(RoomAdd):
-#     hotel_id: int
+class RoomCreate(RoomAdd):
+    hotel_id: int
 
 
 class Room(RoomAdd):

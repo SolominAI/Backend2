@@ -17,8 +17,10 @@ class HotelsRepositories(BaseRepository):
             offset,
     ) -> list[Hotel]:
         query = select(HotelsOrm)
+
         if title:
             query = query.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
+
         if location:
             query = query.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
         query = (
