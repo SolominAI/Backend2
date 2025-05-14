@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Body, HTTPException
 from src.schemas.bookings import BookingAdd, BookingAddRequest
-from src.api.dependencies import DBDep
+from src.api.dependencies import DBDep, UserIdDep
 
 router = APIRouter(prefix='/bookings', tags=['Брони'])
 
 
 @router.post('')
 async def create_booking(
+    user_id: UserIdDep,
     db: DBDep,
     booking_data: BookingAddRequest = Body(openapi_examples={
             '1': {'summary': 'Пример бронирования', 'value': {
@@ -20,6 +21,12 @@ async def create_booking(
     if room is None:
         raise HTTPException(status_code=404, detail='Комната не найдена')
 
-    booking = await db.bookings.add(BookingAdd(price=room.price, **booking_data.model_dump()))
+    room_price: int = room.price
+    _booking_data = BookingAdd(
+        user_id=user_id,
+        price=room_price,
+        **booking_data.model_dump()
+    )
+    booking = await db.bookings.add(_booking_data)
     await db.commit()
     return {"status": "OK", "data": booking}
