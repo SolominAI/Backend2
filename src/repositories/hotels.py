@@ -2,7 +2,6 @@ from datetime import date
 
 from sqlalchemy import select, func
 
-from src.database import engine
 from src.models.rooms import RoomsOrm
 from src.repositories.base import BaseRepository
 from src.models.hotels import HotelsOrm
@@ -22,15 +21,9 @@ class HotelsRepository(BaseRepository):
             location: str | None = None,
             limit: int = 5,
             offset: int = 0,
-            hotel_id: int | None = None
-    ):
-        rooms_ids_to_get = rooms_ids_for_booking(
-            date_from=date_from,
-            date_to=date_to,
-            hotel_id=hotel_id
-        )
+    ) -> list[Hotel]:
 
-        print(rooms_ids_to_get.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+        rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
 
         hotels_ids_to_get = (
             select(RoomsOrm.hotel_id)
@@ -38,16 +31,19 @@ class HotelsRepository(BaseRepository):
             .filter(RoomsOrm.id.in_(rooms_ids_to_get))
         )
 
-        query = (
-            select(self.model).filter(self.model.id.in_(hotels_ids_to_get))
-        )
+        query = select(HotelsOrm).filter(HotelsOrm.id.in_(hotels_ids_to_get))
 
         if title:
             query = query.filter(func.lower(self.model.title).contains(title.strip().lower()))
         if location:
             query = query.filter(func.lower(self.model.location).contains(location.strip().lower()))
 
-        query = query.limit(limit).offset(offset)
+        query = (
+            query
+            .limit(limit)
+            .offset(offset)
+        )
 
         result = await self.session.execute(query)
-        return [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+
+        return [Hotel.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
