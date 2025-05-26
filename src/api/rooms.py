@@ -25,7 +25,7 @@ async def get_room(
         hotel_id: int = Path(..., description='ID отеля'),
         room_id: int = Path(..., description='ID номера'),
 ):
-    return await db.rooms.get_one_or_none(id=room_id, hotel_id=hotel_id)
+    return await db.rooms.get_one_with_facilities(room_id=room_id, hotel_id=hotel_id)
 
 
 @router.post('/{hotel_id}/rooms/{room_id}')
