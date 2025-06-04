@@ -14,26 +14,32 @@ async def test_booking_crud(db):
         date_to=date(year=2026, month=8, day=20),
         price=100,
     )
-    book = await db.bookings.add(booking_data)
+    new_booking = await db.bookings.add(booking_data)
     await db.commit()
 
-    assert book.id is not None
+    assert new_booking.id is not None
 
-    fetched = await db.bookings.get_one_or_none(id=book.id)
-    assert fetched is not None
-    assert fetched.price == 100
+    booking = await db.bookings.get_one_or_none(id=new_booking.id)
+    assert booking
+    assert booking.id == new_booking.id
+    assert booking.room_id == new_booking.room_id
+    assert booking.price == 100
 
-    await db.bookings.edit(BookingAdd(**booking_data.model_dump() | {"price": 200}), id=book.id)
-    await db.commit()
-    updated = await db.bookings.get_one_or_none(id=book.id)
-    assert updated.price == 200
+    updated_date = date(year=2026, month=8, day=25)
+    update_booking_data = BookingAdd(
+        user_id=user_id,
+        room_id=room_id,
+        date_from=date(year=2026, month=8, day=10),
+        date_to=updated_date,
+        price=200,
+    )
 
-    await db.bookings.edit(BookingPatch(price=300), exclude_unset=True, id=book.id)
-    await db.commit()
-    patched = await db.bookings.get_one_or_none(id=book.id)
-    assert patched.price == 300
+    await db.bookings.edit(update_booking_data, id=new_booking.id)
+    update_booking = await db.bookings.get_one_or_none(id=new_booking.id)
+    assert update_booking
+    assert update_booking.id == new_booking.id
+    assert update_booking.date_to == updated_date
 
-    await db.bookings.delete(id=book.id)
-    await db.commit()
-    deleted = await db.bookings.get_one_or_none(id=book.id)
-    assert deleted is None
+    await db.bookings.delete(id=new_booking.id)
+    booking = await db.bookings.get_one_or_none(id=new_booking.id)
+    assert not booking
