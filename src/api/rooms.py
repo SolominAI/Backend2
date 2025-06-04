@@ -28,7 +28,7 @@ async def get_room(
     return await db.rooms.get_one_or_none_with_rels(id=room_id, hotel_id=hotel_id)
 
 
-@router.post('/{hotel_id}/rooms/{room_id}')
+@router.post('/{hotel_id}/rooms')
 async def create_room(
         db: DBDep,
         hotel_id: int = Path(..., description='ID отеля'),
@@ -51,9 +51,13 @@ async def create_room(
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     room = await db.rooms.add(_room_data)
 
-    rooms_facilities_data = [RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids]
+    if room_data.facilities_ids:
+        rooms_facilities_data = [
+            RoomFacilityAdd(room_id=room.id, facility_id=f_id)
+            for f_id in room_data.facilities_ids
+        ]
+        await db.rooms_facilities.add_bulk(rooms_facilities_data)
 
-    await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.commit()
 
     return {'status': 'OK', 'data': room}
