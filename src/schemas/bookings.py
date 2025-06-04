@@ -20,3 +20,10 @@ class Booking(BookingAdd):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BookingPatch(BaseModel):
+    room_id: int | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+    price: int | None = None

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, HTTPException
-from src.schemas.bookings import BookingAdd, BookingAddRequest
+from src.schemas.bookings import BookingAdd, BookingAddRequest, BookingPatch
 from src.api.dependencies import DBDep, UserIdDep
 
 router = APIRouter(prefix='/bookings', tags=['Брони'])
@@ -13,6 +13,11 @@ async def get_all_bookings(db: DBDep):
 @router.get('/me')
 async def get_my_bookings(user_id: UserIdDep, db: DBDep):
     return await db.bookings.get_filtered(user_id=user_id)
+
+
+@router.get('/{booking_id}')
+async def get_booking(booking_id: int, db: DBDep):
+    return await db.bookings.get_one_or_none(id=booking_id)
 
 
 @router.post('')
@@ -40,3 +45,32 @@ async def create_booking(
     booking = await db.bookings.add(_booking_data)
     await db.commit()
     return {"status": "OK", "data": booking}
+
+
+@router.put('/{booking_id}')
+async def edit_booking(
+    booking_id: int,
+    db: DBDep,
+    booking_data: BookingAdd,
+):
+    await db.bookings.edit(booking_data, id=booking_id)
+    await db.commit()
+    return {'status': 'OK'}
+
+
+@router.patch('/{booking_id}')
+async def patch_booking(
+    booking_id: int,
+    db: DBDep,
+    booking_data: BookingPatch
+):
+    await db.bookings.edit(booking_data, exclude_unset=True, id=booking_id)
+    await db.commit()
+    return {'status': 'OK'}
+
+
+@router.delete('/{booking_id}')
+async def delete_booking(booking_id: int, db: DBDep):
+    await db.bookings.delete(id=booking_id)
+    await db.commit()
+    return {'status': 'OK'}
