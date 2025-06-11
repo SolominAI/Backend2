@@ -28,11 +28,14 @@ async def register_user(
             }
         })
 ):
-    hashed_password = AuthService().hesh_password(data.password)
-    new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
-    await db.users.add(new_user_data)
-    await db.commit()
-    return {"status": "OK"}
+    try:
+        hashed_password = AuthService().hesh_password(data.password)
+        new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
+        await db.users.add(new_user_data)
+        await db.commit()
+        return {"status": "OK"}
+    except:
+        raise HTTPException(status_code=400)
 
 
 @router.post('/login')
