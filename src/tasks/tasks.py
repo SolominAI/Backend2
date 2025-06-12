@@ -11,13 +11,13 @@ from src.utils.db_manager import DBManager
 @celery_instance.task
 def test_task():
     sleep(5)
-    print('Я закончил')
+    print("Я закончил")
 
 
 @celery_instance.task
 def resize_image(image_path: str):
     sizes = [1000, 500, 200]
-    output_folder = 'src/static/images'
+    output_folder = "src/static/images"
 
     # Открываем изображение
     img = Image.open(image_path)
@@ -29,7 +29,9 @@ def resize_image(image_path: str):
     # Проходим по каждому размеру
     for size in sizes:
         # Сжимаем изображение
-        img_resized = img.resize((size, int(img.height * (size / img.width))), Image.Resampling.LANCZOS)
+        img_resized = img.resize(
+            (size, int(img.height * (size / img.width))), Image.Resampling.LANCZOS
+        )
 
         # Формируем имя нового файла
         new_file_name = f"{name}_{size}px{ext}"

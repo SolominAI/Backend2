@@ -2,16 +2,16 @@
 import json
 from unittest import mock
 
-mock.patch('fastapi_cache.decorator.cache', lambda *args, **kwargs: lambda f: f).start()
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
 
-import pytest   # noqa
+import pytest  # noqa
 from httpx import AsyncClient
 
 from src.api.dependencies import get_db
 from src.config import settings
 from src.database import Base, engine_null_pool, async_session_maker_null_pool
 from src.main import app
-from src.models import * # noqa
+from src.models import *  # noqa
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAdd
 from src.utils.db_manager import DBManager
@@ -31,6 +31,7 @@ async def get_db_null_pool():
 async def db() -> DBManager:
     async for db in get_db_null_pool():
         yield db
+
 
 app.dependency_overrides[get_db] = get_db_null_pool
 
@@ -62,23 +63,11 @@ async def ac() -> AsyncClient:
 
 @pytest.fixture(scope="session", autouse=True)
 async def register_user(ac, setup_database):
-    await ac.post(
-        "/auth/register",
-        json={
-            "email": "kot@pes.com",
-            "password": "1234"
-        }
-    )
+    await ac.post("/auth/register", json={"email": "kot@pes.com", "password": "1234"})
 
 
 @pytest.fixture(scope="session")
 async def authenticated_ac(register_user, ac):
-    await ac.post(
-        "/auth/login",
-        json={
-            "email": "kot@pes.com",
-            "password": "1234"
-        }
-    )
-    assert ac.cookies['access_token']
+    await ac.post("/auth/login", json={"email": "kot@pes.com", "password": "1234"})
+    assert ac.cookies["access_token"]
     yield ac

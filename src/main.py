@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
     yield
     await redis_manager.close()
 
+
 # if settings.MODE == "TEST":
 #     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
@@ -44,5 +45,5 @@ app.include_router(router_fasilities)
 app.include_router(router_images)
 
 
-if __name__ == '__main__':
-    uvicorn.run('main:app', reload=True)
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True)

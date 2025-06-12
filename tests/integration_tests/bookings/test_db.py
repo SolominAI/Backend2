@@ -3,7 +3,7 @@ from datetime import date
 from src.schemas.bookings import BookingAdd
 
 
-#CRUD -> CREATE READ UPDATTR DELETE
+# CRUD -> CREATE READ UPDATTR DELETE
 async def test_booking_crud(db):
     user_id = (await db.users.get_all())[0].id
     room_id = (await db.rooms.get_all())[0].id

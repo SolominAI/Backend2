@@ -10,15 +10,17 @@ from src.utils.db_manager import DBManager
 
 # Зафисимотсти для фильтрации/пагинации
 
+
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(1, ge=1)]
-    per_page:  Annotated[int | None, Query(None, ge=1, lt=5)]
+    per_page: Annotated[int | None, Query(None, ge=1, lt=5)]
 
 
 PaginationDep = Annotated[PaginationParams, Depends()]
 
 
 # Зависимости для авторизации
+
 
 def get_token(request: Request) -> str:
     token = request.cookies.get("access_token")
@@ -36,6 +38,7 @@ UserIdDep = Annotated[int, Depends(get_current_user_id)]
 
 
 # Зависимости для контекстрого менеджера (сессии)
+
 
 def get_db_manager():
     return DBManager(session_factory=async_session_maker)
