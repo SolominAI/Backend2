@@ -40,7 +40,7 @@ def rooms_ids_for_booking(date_from: date, date_to: date, hotel_id: int | None =
         .select_from(rooms_left_table)
         .filter(
             rooms_left_table.c.rooms_left > 0,
-            rooms_left_table.c.room_id.in_(rooms_ids_for_hotel),
+            rooms_left_table.c.room_id.in_(select(rooms_ids_for_hotel)),
         )
     )
     return rooms_ids_to_get
