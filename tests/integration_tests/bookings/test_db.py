@@ -1,6 +1,6 @@
 from datetime import date
 
-from src.schemas.bookings import BookingAdd, BookingPatch
+from src.schemas.bookings import BookingAdd
 
 
 #CRUD -> CREATE READ UPDATTR DELETE

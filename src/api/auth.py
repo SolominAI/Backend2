@@ -34,7 +34,7 @@ async def register_user(
         await db.users.add(new_user_data)
         await db.commit()
         return {"status": "OK"}
-    except:
+    except: # noqa: E722
         raise HTTPException(status_code=400)
 
 
