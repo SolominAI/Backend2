@@ -21,7 +21,7 @@ async def get_hotels(
     date_from: date = Query(example="2025-05-01"),
     date_to: date = Query(example="2025-05-15"),
 ):
-    check_date_to__after_date_from(1)
+    check_date_to__after_date_from(date_from, date_to)
     per_page = pagination.per_page or 5
     offset = per_page * (pagination.page - 1)
 
