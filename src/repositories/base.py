@@ -1,3 +1,5 @@
+import logging
+
 from asyncpg.exceptions import UniqueViolationError
 
 from sqlalchemy import select, insert, update, delete
@@ -47,10 +49,13 @@ class BaseRepository:
             model = result.scalars().one()
             return self.mapper.map_to_domain_entity(model)
         except IntegrityError as ex:
-            # print(f"{type(ex.orig.__cause__)=}")
+            logging.error(
+                f"Не удалось добавить данные в БД, входные данные={data} тип ошибки:{type(ex.orig.__cause__)=}"
+            )
             if isinstance(ex.orig.__cause__, UniqueViolationError):
                 raise ObjectAlreadyExistsException from ex
             else:
+                logging.error(f"Незнакомая ошибка")
                 raise ex
 
     async def add_bulk(self, data: list[BaseModel]):
