@@ -4,9 +4,10 @@ from fastapi import APIRouter, Path, Body, Query, HTTPException
 
 from src.api.dependencies import DBDep
 from src.exceptions import check_date_to__after_date_from, ObjectNotFoundException, HotelNotFoundHTTPException, \
-    RoomNotFoundHTTPException
+    RoomNotFoundHTTPException, RoomNotFoundException, HotelNotFoundException
 from src.schemas.fasilities import RoomFacilityAdd
 from src.schemas.rooms import RoomAdd, RoomAddRequest, RoomPatchRequest, RoomPatch
+from src.services.rooms import RoomService
 
 router = APIRouter(prefix="/hotel", tags=["Номера"])
 
@@ -18,10 +19,7 @@ async def get_rooms(
     date_to: date = Query(example="2025-05-15"),
     hotel_id: int = Path(..., description="ID отеля"),
 ):
-    check_date_to__after_date_from(date_from, date_to)
-    return await db.rooms.get_filtered_by_time(
-        hotel_id=hotel_id, date_from=date_from, date_to=date_to
-    )
+    return await RoomService(db).get_filtered_by_time(date_from, date_to, hotel_id)
 
 
 @router.get("/{hotel_id}/rooms/{room_id}")
@@ -30,8 +28,9 @@ async def get_room(
     hotel_id: int = Path(..., description="ID отеля"),
     room_id: int = Path(..., description="ID номера"),
 ):
-    room = await db.rooms.get_one_or_none_with_rels(id=room_id, hotel_id=hotel_id)
-    if not room:
+    try:
+        return await RoomService(db).get_room(room_id, hotel_id)
+    except RoomNotFoundException:
         raise RoomNotFoundHTTPException
 
 
@@ -64,20 +63,9 @@ async def create_room(
     ),
 ):
     try:
-        await db.hotels.get_one(id=hotel_id)
-    except ObjectNotFoundException:
+        room = await RoomService(db).create_room(hotel_id, room_data)
+    except HotelNotFoundException:
         raise HotelNotFoundHTTPException
-
-    _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-    room = await db.rooms.add(_room_data)
-
-    if room_data.facilities_ids:
-        rooms_facilities_data = [
-            RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids
-        ]
-        await db.rooms_facilities.add_bulk(rooms_facilities_data)
-
-    await db.commit()
 
     return {"status": "OK", "data": room}
 
