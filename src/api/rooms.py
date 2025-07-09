@@ -1,12 +1,10 @@
 from datetime import date
 
-from fastapi import APIRouter, Path, Body, Query, HTTPException
+from fastapi import APIRouter, Path, Body, Query
 
 from src.api.dependencies import DBDep
-from src.exceptions import check_date_to__after_date_from, ObjectNotFoundException, HotelNotFoundHTTPException, \
-    RoomNotFoundHTTPException, RoomNotFoundException, HotelNotFoundException
-from src.schemas.fasilities import RoomFacilityAdd
-from src.schemas.rooms import RoomAdd, RoomAddRequest, RoomPatchRequest, RoomPatch
+from src.exceptions import HotelNotFoundHTTPException, RoomNotFoundHTTPException, RoomNotFoundException, HotelNotFoundException
+from src.schemas.rooms import RoomAddRequest, RoomPatchRequest
 from src.services.rooms import RoomService
 
 router = APIRouter(prefix="/hotel", tags=["Номера"])
@@ -99,18 +97,7 @@ async def edit_room(
         }
     ),
 ):
-    try:
-        await db.hotels.get_one(id=hotel_id)
-    except ObjectNotFoundException:
-        raise HotelNotFoundHTTPException
-    try:
-        await db.rooms.get_one(id=room_id)
-    except ObjectNotFoundException:
-        raise RoomNotFoundHTTPException
-    _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
-    await db.rooms.edit(_room_data, id=room_id)
-    await db.rooms_facilities.set_room_facilities(room_id, facilities_ids=room_data.facilities_ids)
-    await db.commit()
+    await RoomService(db).edit_room(hotel_id, room_id, room_data)
     return {"status": "OK"}
 
 
@@ -125,22 +112,7 @@ async def patch_room(
     room_id: int = Path(..., description="ID номера"),
     room_data: RoomPatchRequest = Body(...),
 ):
-    try:
-        await db.hotels.get_one(id=hotel_id)
-    except ObjectNotFoundException:
-        raise HotelNotFoundHTTPException
-    try:
-        await db.rooms.get_one(id=room_id)
-    except ObjectNotFoundException:
-        raise RoomNotFoundHTTPException
-    _room_data_dict = room_data.model_dump(exclude_unset=True)
-    _room_data = RoomPatch(hotel_id=hotel_id, **room_data.model_dump(exclude_unset=True))
-    await db.rooms.edit(_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
-    if "facilities_ids" in _room_data_dict:
-        await db.rooms_facilities.set_room_facilities(
-            room_id, facilities_ids=_room_data_dict["facilities_ids"]
-        )
-    await db.commit()
+    await RoomService(db).partially_edit_room(hotel_id, room_id, room_data)
     return {"status": "OK"}
 
 
@@ -150,14 +122,5 @@ async def delete_room(
     hotel_id: int = Path(..., description="ID отеля"),
     room_id: int = Path(..., description="ID номера"),
 ):
-    try:
-        await db.hotels.get_one(id=hotel_id)
-    except ObjectNotFoundException:
-        raise HotelNotFoundHTTPException
-    try:
-        await db.rooms.get_one(id=room_id)
-    except ObjectNotFoundException:
-        raise RoomNotFoundHTTPException
-    await db.rooms.delete(id=room_id, hotel_id=hotel_id)
-    await db.commit()
+    await RoomService(db).delete_room(hotel_id, room_id)
     return {"status": "OK"}
