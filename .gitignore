@@ -4,3 +4,4 @@ venv
 .env
 migrations/
 static/
+.ruff_cache/
